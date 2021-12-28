@@ -176,6 +176,9 @@ class StateSpaceModel(object):
     """Base class for state-space models.
 
     To define a state-space model class, you must sub-class `StateSpaceModel`,
+
+
+
     and at least define methods PX0, PX, and PY. Here is an example::
 
         class LinearGauss(StateSpaceModel):

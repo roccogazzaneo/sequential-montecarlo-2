@@ -580,15 +580,25 @@ class ArrayMetropolis(ArrayMCMC):
 
     def step(self, x, target=None):
         xprop = x.__class__(theta=np.empty_like(x.theta))
+        #propose new parameter
+        #print(self.proposal)
+        # now proposal is random walk and delta set = 0
         delta_lp = self.proposal(x, xprop)
+        #print(delta_lp)
         target(xprop)
+
         lp_acc = xprop.lpost - x.lpost + delta_lp
+        #print(lp_acc)
+        #transformation in probability
         pb_acc = np.exp(np.clip(lp_acc, None, 0.))
         mean_acc = np.mean(pb_acc)
         accept = (random.rand(x.N) < pb_acc)
+        ### RANDOM WALK
+        #accept proposal only where random.rand is less than probability of acceptance
         x.copyto(xprop, where=accept)
         if np.isnan(mean_acc):
             import pdb; pdb.set_trace()
+        #print(mean_acc)
         return mean_acc
 
 class ArrayRandomWalk(ArrayMetropolis):
@@ -654,9 +664,14 @@ class MCMCSequenceWF(MCMCSequence):
         ars = []
         for _ in range(self.nsteps):
             x = x.copy()
+            print(x.theta)
+            # get the mean acceptance rate
             ar = self.mcmc.step(x, target=target)
             ars.append(ar)
             xs.append(x)
+            #print('x')
+            #print(x)
+
         xout = x.concatenate(*xs)
         prev_ars = x.shared.get('acc_rates', [])
         xout.shared['acc_rates'] = prev_ars + [ars]  # a list of lists
@@ -927,10 +942,18 @@ class SMC2(FKSMCsampler):
             liw_Nx = self.exchange_step(x, t, 2 * x.pfs[0].N)
         # compute (estimate of) log p(y_t|\theta,y_{0:t-1})
         lpyt = np.empty(shape=x.N)
+
+        # x is array where each element is a dict with theta, pfd, and lpost
+        #print(x[0]['pfs'])
+
         for m, pf in enumerate(x.pfs):
+            # pf contains: t, resample option and ESS
+            #print(m, pf.loglt)
+
             next(pf)
             lpyt[m] = pf.loglt
         x.lpost += lpyt
+        #lpyt is long as Nx * length of prior (10*20)
         if t > 0:
             x.shared['Nxs'].append(x.pfs[0].N)
         if we_increase_Nx:
@@ -961,6 +984,9 @@ class SMC2(FKSMCsampler):
         x0 = ThetaParticles(theta=self.prior.rvs(size=N),
                             shared={'Nxs': [self.init_Nx]})
         self.current_target(0, self.init_Nx)(x0)
+        #print('x0')
+        #print(x0[200])
+
         return x0
 
     def M(self, t, xp):

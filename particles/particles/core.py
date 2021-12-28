@@ -319,9 +319,13 @@ class SMC(object):
         """Compute auxiliary weights (for APF).
         """
         if self.fk.isAPF:
+            # code does not enter here
             self.logetat = self.fk.logeta(self.t - 1, self.X)
             self.aux = self.wgts.add(self.logetat)
         else:
+            #print('Weight length')
+            #print(len(self.wgts.lw))
+            #print(self.wgts.lw)
             self.aux = self.wgts
 
     def generate_particles(self):
@@ -333,14 +337,30 @@ class SMC(object):
             self.X = self.fk.M0(self.N)
 
     def reweight_particles(self):
+        #print('hello')
+        #print(len(self.fk.logG(self.t, self.Xp, self.X)))
         self.wgts = self.wgts.add(self.fk.logG(self.t, self.Xp, self.X))
 
     def resample_move(self):
         self.rs_flag = self.fk.time_to_resample(self)
         if self.rs_flag:  # if resampling
+            #print('technique')
+            #print(self.resampling)
+            #print('weight')
+            #print(self.aux.W)
+            #print('N')
+            #print(self.N)
+
             self.A = rs.resampling(self.resampling, self.aux.W, M=self.N)
+            #print('A')
+            #print(len(self.A))
+            #print(self.A)
+            #print('X')
+            #print(self.X)
+
             # we always resample self.N particles, even if smc.X has a
             # different size (example: waste-free)
+
             self.Xp = self.X[self.A]
             self.reset_weights()
         else:

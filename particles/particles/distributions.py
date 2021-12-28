@@ -978,6 +978,7 @@ class StructDist(ProbDist):
 
     def rvs(self, size=1):  # Default for size is 1, not None
         out = np.empty(size, dtype=self.dtype)
+        print(self.laws)
         for par, law in self.laws.items():
             cond_law = law(out) if callable(law) else law
             out[par] = cond_law.rvs(size=size)
